@@ -6,6 +6,15 @@ from math import pi
 import qiskit
 
 
+
+if not hasattr(QuantumCircuit, "cnot") and hasattr(QuantumCircuit, "cx"):
+    def _cnot(self, control, target):
+        # Alias directo a cx(control, target)
+        return self.cx(control, target)
+    QuantumCircuit.cnot = _cnot
+
+
+
 def figure_it_out_1():
     """Simplified version of the test circuit 1.
 
