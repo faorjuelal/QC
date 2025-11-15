@@ -1,130 +1,166 @@
-from qiskit import QuantumCircuit,  QuantumRegister
+from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.quantum_info import Statevector
+import qiskit.quantum_info as qi
+import numpy as np
 from math import pi
 import qiskit
-import numpy as np
-import qiskit.quantum_info as qi
+
 
 def figure_it_out_1():
-    """ Simplify the circuit from the test with the strategies we saw in class. You should get
-        get a circuit with at most 3 gates. This will be inspected manually. If you pass the test with
-        more gates, you will get a 0 as your grade (A swap gate or a cnot gate counts as 1 gate)
-    Circuito Original del Taller 3:
-        qc.h(0)
-        qc.z(0)
-        qc.h(0)
-        qc.cnot(0,1)
-        qc.cnot(1,0)
-        qc.cnot(0,1)
-        qc.h(1)
-        qc.z(1)
-        qc.h(1)
-    
-    SIMPLIFICACIONES:
-        Paso 1: H(0)·Z(0)·H(0) = X(0)  [Identity: HZH = X]
-        Paso 2: CNOT(0,1)·CNOT(1,0)·CNOT(0,1) = SWAP(0,1)  [Identity: 3 CNOTs = SWAP]
-        Paso 3: H(1)·Z(1)·H(1) = X(1)  [Identity: HZH = X]
-        
-    RESULTADO: X(0) → SWAP(0,1) → X(1) = 3 gates (SE CUMPLE CON 3 COMPUERTAS)
-    
-    Args: 
-        None
-    """
-    qr=QuantumRegister(2)
-    qc=QuantumCircuit(qr)
-    #begins your code 
-    # Paso 1: H·Z·H = X on qubit 0
-    qc.x(0)
+    """Simplified version of the test circuit 1.
 
-    # Paso 2: Three CNOTs = SWAP
+    Original test circuit (sketch):
+
+        h(0)
+        z(0)
+        h(0)
+        cnot(0,1)
+        cnot(1,0)
+        cnot(0,1)
+        h(1)
+        z(1)
+        h(1)
+
+    Estrategias usadas para simplificar (a nivel conceptual):
+
+    - Identidad de cambio de base con Hadamard:
+          H Z H = X
+      Por lo tanto:
+          H(0) Z(0) H(0) = X(0)
+          H(1) Z(1) H(1) = X(1)
+
+      Es decir, los bloques H–Z–H en cada qubit se reducen a una sola
+      puerta de Pauli X en ese qubit.
+
+    - Reconocer el patrón SWAP en las CNOT:
+          SWAP(0,1) = CNOT(0→1) · CNOT(1→0) · CNOT(0→1)
+
+      El bloque central de tres CNOT del test es exactamente esta
+      descomposición de SWAP.
+
+    - Al analizar el operador completo, se puede verificar (por
+      cálculo de matrices) que todo el circuito original es
+      equivalente a un único SWAP entre los dos qubits (hasta fase
+      global, que no afecta la equivalencia de operadores).
+
+    Límite de puertas:
+        solo 1 puerta (SWAP), que cuenta como 1.
+        → <= 3, se cumple.
+    """
+    qr = QuantumRegister(2)
+    qc = QuantumCircuit(qr)
+
+    # Circuito simplificado: solo un SWAP entre los dos qubits
     qc.swap(0, 1)
 
-    # Paso 3: H·Z·H = X on qubit 1
-    qc.x(1)
-    #ends your code 
     return qi.Operator(qc)
+
 
 def figure_it_out_2():
-    """ Simplify the circuit from the test with the strategies we saw in class. You should get
-        get a circuit with at most 4 gates. This will be inspected manually. If you pass the test with
-        more gates, you will get a 0 as your grade (A swap gate or a cnot gate counts as 1 gate)
-    Circuito Original del Taller 3:
-        qc.h(0)
-        qc.h(0)
-        qc.z(0)
-        qc.h(0)
-        qc.cnot(0,1)
-        qc.h(0)
-        qc.h(1)
-        qc.cnot(0,1)
-        qc.h(0)
-        qc.h(1)
-        qc.cnot(0,1)
-        qc.h(1)
-        qc.z(1)
-        qc.h(1)
-    
-    SIMPLIFICACIONES:
-        Paso 1: H(0)·H(0) = I  [Identity: H·H = I, gates cancel]
-        Paso 2: After cancellation: Z(0)·H(0)·[middle section]·H(1)·Z(1)·H(1)
-        Paso 3: Middle section with CNOTs and Hadamards = SWAP
-        Paso 4: H(1)·Z(1)·H(1) = X(1)  [Identity: HZH = X]
-        
-    RESULTADO: Z(0) → H(0) → SWAP(0,1) → X(1) = 4 gates (SE CUMPLE CON 4 COMPUERTAS)
-    
+    """Simplified version of the test circuit 2.
 
-    Args: 
-        None
+    Circuito del test (resumen):
+
+        h(0)
+        h(0)
+        z(0)
+        h(0)
+        cnot(0,1)
+        h(0)
+        h(1)
+        cnot(0,1)
+        h(0)
+        h(1)
+        cnot(0,1)
+        h(1)
+        z(1)
+        h(1)
+
+    Estrategias usadas:
+
+    - Cancelación de Hadamards consecutivos:
+          H · H = I
+      Las primeras dos H(0) se anulan, y se pueden reagrupar otras
+      H(0)/H(1) para simplificar capas de 1 qubit.
+
+    - De nuevo, usar H Z H = X para reducir bloques de tres puertas
+      (H–Z–H) a una sola Pauli en el qubit correspondiente.
+
+    - Al simplificar las capas de 1 qubit y mirar el bloque de CNOT,
+      el núcleo entanglante vuelve a ser el patrón:
+
+          CNOT(0→1) · CNOT(1→0) · CNOT(0→1) = SWAP(0,1)
+
+    - El operador global del circuito del test resulta equivalente a:
+
+          H en el qubit 0
+          seguido de un SWAP(0,1)
+
+      Es decir, el circuito simplificado es: H(0); SWAP(0,1).
+
+    Límite de puertas:
+        1 puerta H + 1 puerta SWAP = 2 puertas
+        → <= 4, se cumple.
     """
-    qr=QuantumRegister(2)
-    qc=QuantumCircuit(qr)
-    #begins your code 
-    # Paso 1: First two H(0) cancel, leaving Z(0)
-    qc.z(0)
+    qr = QuantumRegister(2)
+    qc = QuantumCircuit(qr)
 
-    # Paso 2: Z·H remains on qubit 0
+    # Circuito simplificado: H en q0 y luego SWAP
     qc.h(0)
-
-    # Paso 3: Middle section simplifies to SWAP
     qc.swap(0, 1)
 
-    # Paso 4: H·Z·H = X on qubit 1
-    qc.x(1)
-    #ends your code 
     return qi.Operator(qc)
+
 
 def figure_it_out_3():
-    """ Simplify the circuit from the test with the strategies we saw in class. You should get
-        get a circuit with at most 3 gates. This will be inspected manually. If you pass the test with
-        more gates, you will get a 0 as your grade (A swap gate or a cnot gate counts as 1 gate)
-    
-    Circuito Original del Taller 3:
-        qc.x(0)
-        qc.h(0)
-        qc.cnot(0,1)
-        qc.z(0)
-        qc.x(1)
-        qc.cnot(0,1)
-        qc.z(0)
-        qc.x(1)
-        qc.h(1)
-    
-    SIMPLIFICACIONES:
-        Paso 1: X(0)·H(0) = H(0)·Z(0)  [Identity: XH = HZ]
-        Paso 2: Two Z(0) gates cancel: Z(0)·Z(0) = I  [Identity: Z·Z = I]
-        Paso 3: Two X(1) gates cancel: X(1)·X(1) = I  [Identity: X·X = I]
-        Paso 4: After all cancellations, remains: H(0)·CNOT(0,1)·H(1)
-        
-    RESULTADO: H(0) → CNOT(0,1) → H(1) = 3 gates (SE CUMPLE CON 3 COMPUERTAS)
-    Args: 
-        None
-    """
-    qr=QuantumRegister(2)
-    qc=QuantumCircuit(qr)
-    #begins your code 
-    qc.h(0)
-    qc.cnot(0, 1)
-    qc.h(1)
-    #ends your code 
-    return qi.Operator(qc)
+    """Simplified version of the test circuit 3.
 
+    Circuito del test:
+
+        x(0)
+        h(0)
+        cnot(0,1)
+        z(0)
+        x(1)
+        cnot(0,1)
+        z(0)
+        x(1)
+        h(1)
+
+    Estrategias usadas:
+
+    - Identidades con H y Pauli:
+          H X H = Z
+          H Z H = X
+
+      Permiten reagrupar y simplificar cadenas de X, Z y H en el
+      qubit 0.
+
+    - Patrones con X en el target de CNOT:
+      Reorganizando las X(1) alrededor de CNOT(0→1) y usando que
+      puertas en qubits distintos conmutan, se ve que el efecto
+      entanglante neto desaparece y el operador completo del test
+      se puede escribir como un producto de puertas de 1 qubit.
+
+    - Por cálculo de matrices (4x4) se verifica que el operador del
+      circuito del test es exactamente equivalente a:
+
+          H en qubit 0
+          H en qubit 1
+          seguido de Z en qubit 0
+
+      Es decir, el circuito simplificado es: H(0); H(1); Z(0).
+
+    Límite de puertas:
+        2 Hadamards + 1 Z = 3 puertas
+        → <= 3, se cumple.
+    """
+    qr = QuantumRegister(2)
+    qc = QuantumCircuit(qr)
+
+    # Circuito simplificado: solo puertas de 1 qubit
+    qc.h(0)
+    qc.h(1)
+    qc.z(0)
+
+    return qi.Operator(qc)
