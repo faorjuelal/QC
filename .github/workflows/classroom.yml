@@ -26,4 +26,3 @@ jobs:
         PYTEST_RESULTS: "${{steps.pytest.outputs.result}}"
       with:
         runners: pytest
-
