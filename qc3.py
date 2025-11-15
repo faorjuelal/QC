@@ -130,8 +130,8 @@ def figure_it_out_3():
     qc=QuantumCircuit(qr)
     #begins your code 
     qc.h(0)
-    qc.cnot(0, 1)
     qc.h(1)
+    qc.z(0)
     #ends your code 
     return qi.Operator(qc)
 
